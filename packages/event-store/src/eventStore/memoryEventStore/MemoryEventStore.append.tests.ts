@@ -1,5 +1,6 @@
 import { MemoryEventStore } from "./MemoryEventStore"
 import { AppendCondition, DcbEvent } from "../EventStore"
+import { AppendConditionError } from "../AppendConditionError"
 import { SequencePosition } from "../SequencePosition"
 import { streamAllEventsToArray } from "../streamAllEventsToArray"
 import { Tags } from "../Tags"
@@ -81,6 +82,77 @@ describe("memoryEventStore.append", () => {
                 await expect(eventStore.append(new EventType1(), appendCondition)).rejects.toThrow(
                     "Expected Version fail: New events matching appendCondition found."
                 )
+            })
+
+            test("should throw an AppendConditionError instance", async () => {
+                await expect(eventStore.append(new EventType1(), appendCondition)).rejects.toThrow(
+                    AppendConditionError
+                )
+            })
+
+            test("should include the appendCondition in the thrown error", async () => {
+                try {
+                    await eventStore.append(new EventType1(), appendCondition)
+                    fail("Expected AppendConditionError to be thrown")
+                } catch (error) {
+                    expect(error).toBeInstanceOf(AppendConditionError)
+                    const appendError = error as AppendConditionError
+                    expect(appendError.appendCondition).toBe(appendCondition)
+                    expect(appendError.appendCondition.expectedCeiling).toBe(appendCondition.expectedCeiling)
+                    expect(appendError.appendCondition.query).toBe(appendCondition.query)
+                }
+            })
+
+            test("should have the correct error name", async () => {
+                try {
+                    await eventStore.append(new EventType1(), appendCondition)
+                    fail("Expected AppendConditionError to be thrown")
+                } catch (error) {
+                    expect(error).toBeInstanceOf(AppendConditionError)
+                    expect((error as AppendConditionError).name).toBe("AppendConditionError")
+                }
+            })
+
+            test("should be catchable as an Error", async () => {
+                try {
+                    await eventStore.append(new EventType1(), appendCondition)
+                    fail("Expected AppendConditionError to be thrown")
+                } catch (error) {
+                    expect(error).toBeInstanceOf(Error)
+                    expect(error).toBeInstanceOf(AppendConditionError)
+                }
+            })
+        })
+
+        describe("when append condition with tag filter and maxSequencePosition provided", () => {
+            test("should throw AppendConditionError when tag-filtered events exist beyond ceiling", async () => {
+                const appendCondition: AppendCondition = {
+                    query: Query.fromItems([{ eventTypes: ["testEvent1"], tags: Tags.fromObj({ testTagKey: "tagA" }) }]),
+                    expectedCeiling: SequencePosition.zero()
+                }
+
+                await eventStore.append(new EventType1("tagA"))
+
+                await expect(eventStore.append(new EventType1("tagA"), appendCondition)).rejects.toThrow(
+                    AppendConditionError
+                )
+            })
+
+            test("should not throw when tag-filtered events do not match", async () => {
+                const appendCondition: AppendCondition = {
+                    query: Query.fromItems([{ eventTypes: ["testEvent1"], tags: Tags.fromObj({ testTagKey: "tagB" }) }]),
+                    expectedCeiling: SequencePosition.zero()
+                }
+
+                await eventStore.append(new EventType1("tagA"))
+
+                await expect(eventStore.append(new EventType1("tagA"), appendCondition)).resolves.not.toThrow()
+            })
+        })
+
+        describe("when no append condition is provided", () => {
+            test("should not throw any error", async () => {
+                await expect(eventStore.append(new EventType1())).resolves.not.toThrow()
             })
         })
 
