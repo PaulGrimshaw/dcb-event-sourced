@@ -1,7 +1,7 @@
 {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
-    "jestrunner.codeLensSelector": "**/*.{tests}.{ts}",
+    "vitest.include": ["**/*.tests.ts"],
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     }

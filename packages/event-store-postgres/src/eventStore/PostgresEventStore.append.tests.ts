@@ -1,7 +1,7 @@
 import { Pool, PoolClient } from "pg"
 import { AppendCondition, DcbEvent, Query, SequencePosition, streamAllEventsToArray, Tags } from "@dcb-es/event-store"
 import { PostgresEventStore } from "./PostgresEventStore"
-import { getTestPgDatabasePool } from "../../jest.testPgDbPool"
+import { getTestPgDatabasePool } from "@test/testPgDbPool"
 
 class EventType1 implements DcbEvent {
     type: "testEvent1" = "testEvent1"
@@ -33,7 +33,7 @@ describe("postgresEventStore.append", () => {
     let eventStore: PostgresEventStore
 
     beforeAll(async () => {
-        pool = await getTestPgDatabasePool()
+        pool = await getTestPgDatabasePool({ max: 100 })
         eventStore = new PostgresEventStore(pool)
         await eventStore.ensureInstalled()
     })
