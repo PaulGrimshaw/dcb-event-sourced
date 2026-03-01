@@ -4,7 +4,7 @@ import {
     PostgresCourseSubscriptionsRepository,
     Student
 } from "./PostgresCourseSubscriptionRespository"
-import { getTestPgDatabasePool } from "../../jest.testPgDbPool"
+import { getTestPgDatabasePool } from "@test/testPgDbPool"
 
 const COURSE_1 = {
     id: "course-1",

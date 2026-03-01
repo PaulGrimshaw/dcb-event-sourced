@@ -5,7 +5,7 @@ import {
     PostgresCourseSubscriptionsRepository
 } from "../postgresCourseSubscriptionRepository/PostgresCourseSubscriptionRespository"
 import { Api, setupHandlers } from "./Api"
-import { getTestPgDatabasePool } from "../../jest.testPgDbPool"
+import { getTestPgDatabasePool } from "@test/testPgDbPool"
 import { HandlerCatchup, PostgresEventStore } from "@dcb-es/event-store-postgres"
 
 const COURSE_1 = {

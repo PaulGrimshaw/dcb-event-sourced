@@ -1,6 +1,6 @@
 import { Pool, PoolClient } from "pg"
 import { Api } from "./Api"
-import { getTestPgDatabasePool } from "../../jest.testPgDbPool"
+import { getTestPgDatabasePool } from "@test/testPgDbPool"
 import { PostgresEventStore } from "@dcb-es/event-store-postgres"
 
 const COURSE_1 = {

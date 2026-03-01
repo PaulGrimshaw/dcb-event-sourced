@@ -2,7 +2,7 @@ import { Pool, PoolClient } from "pg"
 import { v4 as uuid } from "uuid"
 import { Tags } from "@dcb-es/event-store"
 import { HandlerCatchup } from "./HandlerCatchup"
-import { getTestPgDatabasePool } from "../../jest.testPgDbPool"
+import { getTestPgDatabasePool } from "@test/testPgDbPool"
 import { PostgresEventStore } from "../eventStore/PostgresEventStore"
 
 describe("UpdatePostgresHandlers tests", () => {

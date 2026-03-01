@@ -1,6 +1,6 @@
 import { DcbEvent, streamAllEventsToArray, SequencePosition, Tags, Query } from "@dcb-es/event-store"
 import { Pool, PoolClient } from "pg"
-import { getTestPgDatabasePool } from "../../jest.testPgDbPool"
+import { getTestPgDatabasePool } from "@test/testPgDbPool"
 import { PostgresEventStore } from "./PostgresEventStore"
 
 class EventType1 implements DcbEvent {
