@@ -2,7 +2,15 @@ import { Pool, PoolClient, QueryResult } from "pg"
 import { dbEventConverter } from "./utils"
 import { readSqlWithCursor } from "./readSql"
 import { appendSql as appendCommand } from "./appendCommand"
-import { EventStore, DcbEvent, AppendCondition, EventEnvelope, ReadOptions, Query } from "@dcb-es/event-store"
+import {
+    EventStore,
+    DcbEvent,
+    AppendCondition,
+    AppendConditionError,
+    EventEnvelope,
+    ReadOptions,
+    Query
+} from "@dcb-es/event-store"
 import { ensureInstalled } from "./ensureInstalled"
 
 const BATCH_SIZE = 100
@@ -33,7 +41,10 @@ export class PostgresEventStore implements EventStore {
         const { query, expectedCeiling } = appendCondition ?? {}
         const { statement, params } = appendCommand(evts, query, expectedCeiling, this.tableName)
         const result = await this.client.query(statement, params)
-        if (result.rowCount === 0) throw new Error("Expected Version fail: New events matching appendCondition found.")
+        if (result.rowCount === 0) {
+            if (appendCondition) throw new AppendConditionError(appendCondition)
+            throw new Error("Unexpected append failure: no events were inserted.")
+        }
     }
 
     async *read(query: Query, options?: ReadOptions): AsyncGenerator<EventEnvelope> {
