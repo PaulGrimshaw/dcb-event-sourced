@@ -1,4 +1,5 @@
 export { EventStore, DcbEvent, EventEnvelope, AppendCondition, ReadOptions } from "./src/eventStore/EventStore"
+export { AppendConditionError } from "./src/eventStore/AppendConditionError"
 
 export { Query, QueryItem } from "./src/eventStore/Query"
 export { Tags } from "./src/eventStore/Tags"

@@ -1,4 +1,5 @@
 import { EventEnvelope, EventStore, AppendCondition, DcbEvent, ReadOptions } from "../EventStore"
+import { AppendConditionError } from "../AppendConditionError"
 import { SequencePosition } from "../SequencePosition"
 import { Timestamp } from "../Timestamp"
 import { isSeqOutOfRange, matchesQueryItem as matchesQueryItem, deduplicateEvents } from "./utils"
@@ -89,8 +90,7 @@ export class MemoryEventStore implements EventStore {
 
             const matchingEvents = getMatchingEvents(query, maxSequencePosition, this.events)
 
-            if (matchingEvents.length > 0)
-                throw new Error("Expected Version fail: New events matching appendCondition found.")
+            if (matchingEvents.length > 0) throw new AppendConditionError(appendCondition)
         }
 
         this.events.push(...eventEnvelopes)

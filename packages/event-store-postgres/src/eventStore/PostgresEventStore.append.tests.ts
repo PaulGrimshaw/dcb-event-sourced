@@ -1,5 +1,13 @@
 import { Pool, PoolClient } from "pg"
-import { AppendCondition, DcbEvent, Query, SequencePosition, streamAllEventsToArray, Tags } from "@dcb-es/event-store"
+import {
+    AppendCondition,
+    AppendConditionError,
+    DcbEvent,
+    Query,
+    SequencePosition,
+    streamAllEventsToArray,
+    Tags
+} from "@dcb-es/event-store"
 import { PostgresEventStore } from "./PostgresEventStore"
 import { getTestPgDatabasePool } from "@test/testPgDbPool"
 
@@ -120,6 +128,45 @@ describe("postgresEventStore.append", () => {
                     "Expected Version fail: New events matching appendCondition found."
                 )
             })
+
+            test("should throw an AppendConditionError instance", async () => {
+                await expect(eventStore.append(new EventType1(), appendCondition)).rejects.toThrow(
+                    AppendConditionError
+                )
+            })
+
+            test("should include the appendCondition in the thrown error", async () => {
+                try {
+                    await eventStore.append(new EventType1(), appendCondition)
+                    fail("Expected AppendConditionError to be thrown")
+                } catch (error) {
+                    expect(error).toBeInstanceOf(AppendConditionError)
+                    const appendError = error as AppendConditionError
+                    expect(appendError.appendCondition).toBe(appendCondition)
+                    expect(appendError.appendCondition.expectedCeiling).toBe(appendCondition.expectedCeiling)
+                    expect(appendError.appendCondition.query).toBe(appendCondition.query)
+                }
+            })
+
+            test("should have the correct error name", async () => {
+                try {
+                    await eventStore.append(new EventType1(), appendCondition)
+                    fail("Expected AppendConditionError to be thrown")
+                } catch (error) {
+                    expect(error).toBeInstanceOf(AppendConditionError)
+                    expect((error as AppendConditionError).name).toBe("AppendConditionError")
+                }
+            })
+
+            test("should be catchable as an Error", async () => {
+                try {
+                    await eventStore.append(new EventType1(), appendCondition)
+                    fail("Expected AppendConditionError to be thrown")
+                } catch (error) {
+                    expect(error).toBeInstanceOf(Error)
+                    expect(error).toBeInstanceOf(AppendConditionError)
+                }
+            })
         })
 
         test("should concurrently add a single event rejecting rest when lots attempted in parallel with same append condition", async () => {
@@ -135,6 +182,14 @@ describe("postgresEventStore.append", () => {
             }
             const results = await Promise.allSettled(storeEvents)
             expect(results.filter(r => r.status === "fulfilled").length).toBe(1)
+
+            const rejectedResults = results.filter(
+                (r): r is PromiseRejectedResult => r.status === "rejected"
+            )
+            for (const rejected of rejectedResults) {
+                expect(rejected.reason).toBeInstanceOf(AppendConditionError)
+            }
+
             const events = await streamAllEventsToArray(eventStore.read(Query.all()))
             expect(events.length).toBe(2)
         })
@@ -167,7 +222,7 @@ describe("postgresEventStore.append", () => {
 
             // Third append with the same condition should fail because it would exceed expectedCeiling=2
             await expect(eventStore.append(new EventType1(), appendCondition)).rejects.toThrow(
-                "Expected Version fail: New events matching appendCondition found."
+                AppendConditionError
             )
         })
     })
